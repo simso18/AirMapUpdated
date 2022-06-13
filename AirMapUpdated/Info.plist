@@ -2,6 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Store Tests</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Store Tests</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speech Input</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech Input</string>
+	<key>NSSiriUsageDescription</key>
+	<string>Speech</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Gyroscope Usage</string>
+	<key>NSCameraUsageDescription</key>
+	<string>ARKit Usage</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Map Creation</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Map Creation</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Map Creation</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
