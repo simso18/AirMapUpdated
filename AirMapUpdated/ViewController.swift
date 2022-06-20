@@ -53,8 +53,8 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
     var timer = 0
     var zoom : Double = 1
     var zoomLevel : Int = 1
-    var currLocLat : CLLocationDegrees = 51.48972
-    var currLocLon : CLLocationDegrees = -0.13034
+    var currLocLat : CLLocationDegrees = 51.4894
+    var currLocLon : CLLocationDegrees = -0.1296
     var currHeading : CLLocationDegrees = 0
     var explore : Bool = false
     var currentLandmark : String = "Nothing"
@@ -276,7 +276,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
     
     
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        if nextFeatureState != 0{
+        if nextFeatureState != 0{ //error
             camPosition = newView.session.currentFrame?.camera.transform.columns.3
             if ori == "north"{
                 locX = Int(CGFloat(camPosition!.x)*imgWidthScale + imgWidth/2)
@@ -410,65 +410,112 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
         recRequest?.endAudio()
         speech(inputString: "Stopped Listening")
         print(speechInput)
-        voiceCommands(inputString: speechInput)
+        voiceCommands(inString: speechInput)
     }
     
-    func voiceCommands (inputString : String){
-        if inputString == "Remove transport"{
+    func voiceCommands (inString : String){
+        var inputString = inString
+        inputString = inputString.lowercased()
+        if inputString == "remove transport"{
             transport = false
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Add transport"{
+        else if inputString == "add transport"{
             transport = true
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Remove road"{
+        else if inputString == "remove road"{
             roads = false
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Add road"{
+        else if inputString == "add road"{
             transport = true
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Remove park"{
+        else if inputString == "remove park"{
             park = false
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Add park"{
+        else if inputString == "add park"{
             park = true
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Remove interest"{
+        else if inputString == "remove interest"{
             pointsOfInterest = false
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Add interest"{
+        else if inputString == "add interest"{
             pointsOfInterest = true
             let imgNew = drawMap()
             drawView.image = imgNew
             extractor = PixelExtractor(img: imgNew.cgImage!)
         }
-        else if inputString == "Zoom in"{
+        else if inputString == "zoom in"{
             zoomIn()
         }
-        else if inputString == "Zoom out"{
+        else if inputString == "zoom out"{
             zoomOut()
         }
-        else if inputString == "Home"{
+        else if inputString == "test pattern"{
+            zoom = 1
+            zoomLevel = 1
+            ori = "north"
+            currHeading = 0
+//            guard let locValue: CLLocationCoordinate2D = self.locationManager.location?.coordinate else { return }
+//            self.currLocLat = locValue.latitude
+//            self.currLocLon = locValue.longitude
+            self.currLocLat = 51.4894
+            self.currLocLon = -0.1296
+            postAuth()
+            let imgNew = drawMap()
+            drawView.image = imgNew
+            extractor = PixelExtractor(img: imgNew.cgImage!)
+        }
+        else if inputString == "test direction"{
+            zoom = 1
+            zoomLevel = 1
+            ori = "north"
+            currHeading = 180
+//            guard let locValue: CLLocationCoordinate2D = self.locationManager.location?.coordinate else { return }
+//            self.currLocLat = locValue.latitude
+//            self.currLocLon = locValue.longitude
+            self.currLocLat = 51.48972
+            self.currLocLon = -0.13034
+            postAuth()
+            let imgNew = drawMap()
+            drawView.image = imgNew
+            extractor = PixelExtractor(img: imgNew.cgImage!)
+        }
+        else if inputString == "test remove"{
+            zoom = 1
+            zoomLevel = 1
+            ori = "north"
+            currHeading = 0
+//            guard let locValue: CLLocationCoordinate2D = self.locationManager.location?.coordinate else { return }
+//            self.currLocLat = locValue.latitude
+//            self.currLocLon = locValue.longitude
+            self.currLocLat = 51.491
+            self.currLocLon = -0.1488
+            postAuth()
+            let imgNew = drawMap()
+            drawView.image = imgNew
+            extractor = PixelExtractor(img: imgNew.cgImage!)
+        }
+        else if inputString == "home"{
             zoom = 1
             zoomLevel = 1
             ori = "north"
@@ -582,7 +629,7 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
         print(body)
         print(components.url)
         let task = URLSession.shared.dataTask(with: components.url!) { (data, response, error) in
-            //defer { sem.signal() }
+            defer { sem.signal() }
             guard let data = data else { return }
             do {
                 let resData = try JSONDecoder().decode(Response.self, from: data)
@@ -676,19 +723,23 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
         
     func drawMap() -> UIImage{
         let image = renderer.image { (context) in
-            var rgbRoad = 0.004
-            var rgbTransport = 0.004
-            var rgbTour = 0.004
-            var rgbPark = 0.004
+            var rgbRoad : CGFloat = 1
+            var rgbTransport : CGFloat = 1
+            var rgbTour : CGFloat = 1
+            var rgbPark : CGFloat = 1
+            var red:CGFloat = 0.0
+            var green:CGFloat = 0.0
+            var blue:CGFloat = 0.0
+            var alpha:CGFloat = 0.0
             nameColour = [:]
             if roads == true{
                 for element in self.finResults.elementsRoad {
                     var roadCol = nameColour[element.tags.name]
                     if (roadCol == nil){
-                        roadCol = UIColor(red: rgbRoad, green: rgbRoad, blue: rgbRoad, alpha: 1.0)
+                        roadCol = UIColor(red: rgbRoad, green: rgbRoad, blue: rgbRoad, alpha: 1)
                         //col = UIColor.ora
                         nameColour[element.tags.name] = roadCol
-                        rgbRoad = rgbRoad + 0.004
+                        rgbRoad = rgbRoad + 1
                     }
                     var linePoints : [CGPoint] = []
                     for coordPair in element.geometry{
@@ -698,6 +749,8 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                         //}
                     }
                     //context.cgContext.setBlendMode(CGBlendMode.destinationAtop)
+                    roadCol!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                    roadCol = UIColor(red: red*0.004, green: green*0.004, blue: blue*0.004, alpha: 1)
                     context.cgContext.setBlendMode(CGBlendMode.multiply)
                     context.cgContext.addLines(between: linePoints)
                     context.cgContext.setLineWidth(50.0)
@@ -705,19 +758,22 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                     context.cgContext.strokePath()
                 }
             }
+            context.cgContext.setBlendMode(CGBlendMode.destinationAtop)
             if transport == true{
                 for element in self.finResults.elementsBus {
                     let newBusLabel = element.tags.name + "Bus Stop"
                     var busCol = nameColour[newBusLabel]
                     if (busCol == nil){
-                        busCol = UIColor(red: 1.0, green: rgbTransport, blue: 0, alpha: 1.0)
+                        busCol = UIColor(red: 255, green: rgbTransport, blue: 0, alpha: 1)
                         nameColour[newBusLabel] = busCol
-                        rgbTransport = rgbTransport + 0.004
+                        rgbTransport = rgbTransport + 1
                     }
                     let (finX, finY) = drawConversion(inputLon: element.lon, inputLat: element.lat)
                     let rect = CGRect(x: finX - 40, y: finY - 40, width: 80, height: 80)
                     //UIColor.red.setFill()
                     //context.cgContext.setBlendMode(CGBlendMode.sourceAtop)
+                    busCol!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                    busCol = UIColor(red: red*0.004, green: green*0.004, blue: blue*0.004, alpha: 1)
                     busCol!.setFill()
                     context.cgContext.addEllipse(in: rect)
                     context.cgContext.drawPath(using: .fill)
@@ -726,27 +782,30 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                     let newTrainLabel = element.tags.name + "Train Station"
                     var trainCol = nameColour[newTrainLabel]
                     if (trainCol == nil){
-                        trainCol = UIColor(red: 1, green: rgbTransport, blue: 0, alpha: 1.0)
+                        trainCol = UIColor(red: 255, green: rgbTransport, blue: 0, alpha: 1)
                         nameColour[newTrainLabel] = trainCol
-                        rgbTransport = rgbTransport + 0.004
+                        rgbTransport = rgbTransport + 1
                     }
                     let (finX, finY) = drawConversion(inputLon: element.lon, inputLat: element.lat)
                     let rect = CGRect(x: finX - 60, y: finY - 60, width: 120, height: 120)
                     //UIColor.red.setFill()
                     //context.cgContext.setBlendMode(CGBlendMode.sourceAtop)
+                    trainCol!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                    trainCol = UIColor(red: red*0.004, green: green*0.004, blue: blue*0.004, alpha: 1)
                     trainCol!.setFill()
                     context.cgContext.addEllipse(in: rect)
                     context.cgContext.drawPath(using: .fill)
                 }
             }
+            context.cgContext.setBlendMode(CGBlendMode.destinationAtop)
             if pointsOfInterest == true{
                 for element in self.finResults.elementsTourism {
                     var tourCol = nameColour[element.tags.name]
                     if (tourCol == nil){
-                        tourCol = UIColor(red: rgbTour, green: 0, blue: 1, alpha: 1.0)
+                        tourCol = UIColor(red: rgbTour, green: 0, blue: 255, alpha: 1)
                         //col = UIColor.ora
                         nameColour[element.tags.name] = tourCol
-                        rgbTour = rgbTour + 0.004
+                        rgbTour = rgbTour + 1
                     }
                     var linePoints : [CGPoint] = []
                     for coordPair in element.geometry{
@@ -759,6 +818,8 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                     //context.cgContext.setBlendMode(CGBlendMode.sourceAtop)
                     context.cgContext.addLines(between: linePoints)
                     //context.cgContext.setLineWidth(50.0)
+                    tourCol!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                    tourCol = UIColor(red: red*0.004, green: green*0.004, blue: blue*0.004, alpha: 1)
                     tourCol!.setFill()
                     context.cgContext.fillPath()
                 }
@@ -768,10 +829,10 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                     let newParkLabel = element.tags.name + "Green Space"
                     var parkCol = nameColour[newParkLabel]
                     if (parkCol == nil){
-                        parkCol = UIColor(red: 0, green: 1, blue: rgbPark, alpha: 1.0)
+                        parkCol = UIColor(red: 0, green: 255, blue: rgbPark, alpha: 1)
                         //col = UIColor.ora
                         nameColour[newParkLabel] = parkCol
-                        rgbPark = rgbPark + 0.004
+                        rgbPark = rgbPark + 1
                     }
                     var linePoints : [CGPoint] = []
                     for coordPair in element.geometry{
@@ -784,6 +845,8 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
                     //context.cgContext.setBlendMode(CGBlendMode.sourceAtop)
                     context.cgContext.addLines(between: linePoints)
                     //context.cgContext.setLineWidth(50.0)
+                    parkCol!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+                    parkCol = UIColor(red: red*0.004, green: green*0.004, blue: blue*0.004, alpha: 1)
                     parkCol!.setFill()
                     context.cgContext.fillPath()
                 }
@@ -820,9 +883,14 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
             welcome()
         }
         else{
-            engine.stop(completionHandler: { (_) -> Void in
-            })
-            currHeading = locationManager.heading!.trueHeading
+            if engine != nil{
+                engine.stop(completionHandler: { (_) -> Void in
+                })
+            }
+            else{
+                newView.session.run(checkAR)
+            }
+            //currHeading = locationManager.heading!.trueHeading
 
             imgSaver.saveImage(image: drawView.image!)
             //cameraOffsetX = camPosition.x
@@ -943,27 +1011,26 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
             var blue:CGFloat = 0.0
             var alpha:CGFloat = 0.0
             colorState!.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-            red = CGFloat(red)*0.004
-            green = CGFloat(green)*0.004
-            blue = CGFloat(blue)*0.004
-            if red > 1 {
-                red = 1
-            }
-            if blue > 1{
-                blue = 1
-            }
-            if green > 1 {
-                green = 1
-            }
-            let newCol = UIColor(red: red, green: green, blue: blue, alpha: alpha)
-
+            //red = CGFloat(red*0.004)
+            //green = CGFloat(green*0.004)
+            //blue = CGFloat(blue*0.004)
+//            if red > 1 {
+//                red = 1
+//            }
+//            if blue > 1{
+//                blue = 1
+//            }
+//            if green > 1 {
+//                green = 1
+//            }
+            let newCol = UIColor(red: red, green: green, blue: blue, alpha: 1)
             if colorState == UIColor(red: 255, green: 255, blue: 255, alpha: 1){
                 currentLandmark = "Nothing"
             }
             if let key = nameColour.someKey(forValue: newCol){
-                    currentLandmark = key
-                    //speak
-                    speech(inputString: currentLandmark)
+                currentLandmark = key
+                print(currentLandmark)
+                speech(inputString: currentLandmark)
             }
             let outImage = drawOnMap(inputImg: drawView.image!, newPoint: CGPoint(x: Int(locX/3), y: Int(863 - locY/3)), line : false)
             drawView.image = outImage
@@ -1151,6 +1218,27 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
             print("failed to play pattern: \(error.localizedDescription)")
         }
     }
+    
+    func complexHapPink(){
+        var events = [CHHapticEvent]()
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.3)
+        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.3)
+        let short1 = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
+        let short2 = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0.1)
+
+        do {
+            try engine.start()
+            let pattern = try CHHapticPattern(events: [short1, short2], parameters: [])
+            player = try engine.makeAdvancedPlayer(with: pattern)
+            player.loopEnabled = true
+            //player.playbackRate = 2
+            player.loopEnd = 0.11
+            try player.start(atTime: 0.0)
+
+        } catch{
+            print("failed to play pattern: \(error.localizedDescription)")
+        }
+    }
 
     func hapticFeedback(color: UIColor){
         prepareHaptics()
@@ -1160,22 +1248,22 @@ class ViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate, CL
         var alpha:CGFloat = 0.0
         color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
         if (red == green) && (green == blue) && (blue != 255) && (blue != 0){
-            complexHapBlack() //good
+            complexHapBlack() //black
         }
         else if (red == 255) && (green != 255) && (blue == 0){
-            complexHapOrange() // good
+            complexHapOrange() //transport
         }
         else if (colorHash[color] == "Yellow"){
-            complexHapRed() //good
+            complexHapRed() //boundary
         }
         else if (red != 255) && (green == 0) && (blue == 255){
-            complexHapPurple()
+            complexHapPurple() //poi
         }
         else if (red == green) && (green == blue) && (blue == 0){
-            complexHapGreen() //good
+            complexHapGreen() //junction
         }
         else if (red == 0) && (green == 255) && (blue != 255){
-            complexHapBlue()
+            complexHapBlue() //green space
         }
         else if color == UIColor.white{
             engine.stop(completionHandler: { (_) -> Void in
@@ -1349,7 +1437,8 @@ class PixelExtractor {
         let bitmapBytesPerRow = pixelsWide * 4
         let bitmapByteCount = bitmapBytesPerRow * Int(pixelsHigh)
 
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        //let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let colorSpace : CGColorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
 
 
         let bitmapData = malloc(bitmapByteCount)
